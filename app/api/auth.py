@@ -4,8 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import create_access_token
 from app.models.user import User
-from app.schemas.user import RegisterRequest, UserResponse
+from app.schemas.user import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -32,3 +33,16 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     await db.commit()
     await db.refresh(user)
     return user
+
+@router.post("/login", response_model=TokenResponse)
+async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.username == payload.username))
+    user = result.scalar_one_or_none()
+
+    if not user or not bcrypt.checkpw(payload.password.encode(), user.password_hash.encode()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+    
+    return TokenResponse(access_token=create_access_token(str(user.id)))
