@@ -4,13 +4,14 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
+from app.models import Base
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = None
+target_metadata = Base.metadata
 
 
 def _get_sync_url() -> str:
