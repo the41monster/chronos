@@ -48,3 +48,14 @@ class JobResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class RescheduleRequest(BaseModel):
+    execution_time: datetime | None = None
+    recurrence_pattern: str | None = None
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> "RescheduleRequest":
+        if not self.execution_time and not self.recurrence_pattern:
+            raise ValueError("At least one of execution_time or recurrence_pattern must be provided")
+        return self
