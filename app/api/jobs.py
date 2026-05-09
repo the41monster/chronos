@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, status
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.job import Job
 from app.models.user import User
-from app.schemas.job import JobSubmitRequest, JobSubmitResponse
+from app.schemas.job import JobResponse, JobSubmitRequest, JobSubmitResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -29,4 +31,25 @@ async def submit_job(
     db.add(job)
     await db.commit()
     await db.refresh(job)
+    return job
+
+
+@router.get("", response_model=list[JobResponse])
+async def list_jobs(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Job).where(Job.user_id == current_user.id))
+    return result.scalars().all()
+
+
+@router.get("/{job_id}", response_model=JobResponse)
+async def get_job(
+    job_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    job = await db.get(Job, job_id)
+    if not job or job.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
     return job
