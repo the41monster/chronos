@@ -9,4 +9,10 @@ class Settings(BaseSettings):
 
     SCHEDULER_POLL_INTERVAL: int = 10 # seconds
 
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+
 settings = Settings() # type: ignore[call-arg]

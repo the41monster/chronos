@@ -23,5 +23,6 @@ class Job(Base):
     recurrence_pattern: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[JobStatus] = mapped_column(String(50), server_default=JobStatus.SCHEDULED, nullable=False)
     max_retries: Mapped[int] = mapped_column(Integer, server_default="3", nullable=False)
+    retry_count: Mapped[int] = mapped_column(Integer, server_default="0", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
