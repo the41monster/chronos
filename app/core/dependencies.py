@@ -13,7 +13,7 @@ from app.core.config import settings
 bearer_scheme = HTTPBearer()
 
 
-async def verify_monitor_key(x_monitor_key: str = Header()) -> None:
+async def verify_monitor_key(x_monitor_key: str | None = Header(default=None)) -> None:
     if not settings.MONITOR_API_KEY or x_monitor_key != settings.MONITOR_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
