@@ -17,3 +17,8 @@ class JobStatus(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+class ExecutionStatus(StrEnum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILURE = "failure"

@@ -7,4 +7,6 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    SCHEDULER_POLL_INTERVAL: int = 10 # seconds
+
 settings = Settings() # type: ignore[call-arg]
