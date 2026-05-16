@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
 from app.api.jobs import router as jobs_router
+from app.api.monitor import router as monitor_router
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, verify_db_connection
 from app.scheduler.scheduler import poll
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Chronos", version="0.1.0", lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(jobs_router)
+app.include_router(monitor_router)
 
 @app.get("/health")
 async def health():
