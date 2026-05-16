@@ -2,15 +2,17 @@ import asyncio
 import logging
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from croniter import croniter
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from app.core.email import send_failure_email
 from app.models.enums import ExecutionStatus, JobStatus, JobType, ScheduleType
 from app.models.job import Job
 from app.models.job_execution import JobExecution
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +96,7 @@ async def _execute_job(
                 cron = croniter(recurrence_pattern, datetime.now(timezone.utc))
                 job.execution_time = cron.get_next(datetime)
                 job.status = JobStatus.SCHEDULED
+                job.retry_count = 0
             else:
                 job.status = JobStatus.COMPLETED
             await db.commit()
@@ -106,10 +109,20 @@ async def _execute_job(
             execution.status = ExecutionStatus.FAILURE
             execution.completed_at = datetime.now(timezone.utc)
             execution.error_message = str(e)
-            job.status = JobStatus.FAILED
+
+            if job.retry_count < job.max_retries:
+                job.retry_count += 1
+                job.status = JobStatus.SCHEDULED
+                job.execution_time = datetime.now(timezone.utc) + timedelta(seconds=30 * job.retry_count)
+                logger.warning("Job %s failed, retrying (%d/%d)", job.id, job.retry_count, job.max_retries)
+            else:
+                job.status = JobStatus.FAILED
+                logger.error("Job %s failed permanently after %d retries", job.id, job.retry_count)
+                user = await db.get(User, job.user_id)
+                if user and user.email:
+                    await send_failure_email(user.email, str(job.id), job.name, str(e))
+            
             await db.commit()
-            logger.error("Job %s failed", job.id)
-        raise
 
 
 async def worker(session_factory: async_sessionmaker, queue: asyncio.Queue) -> None:

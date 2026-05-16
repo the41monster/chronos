@@ -34,7 +34,8 @@ async def _dispatch_due_jobs(session_factory: async_sessionmaker, queue: asyncio
             execution = JobExecution(
                 job_id=job.id,
                 started_at=datetime.now(timezone.utc),
-                status=ExecutionStatus.RUNNING
+                status=ExecutionStatus.RUNNING,
+                retry_count=job.retry_count
             )
             db.add(execution)
             executions.append((job, execution))
