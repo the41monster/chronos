@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: chronos_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      
+      - name: Lint
+        run: ruff check .
+      
+      - name: Type check
+        run: mypy app/
+
+      - name: Test
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/chronos
+          SECRET_KEY: test_secret_key
+          MONITOR_API_KEY: test_monitor_api_key
+        run: pytest -v --cov=app --cov-fail-under=80

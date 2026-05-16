@@ -3,8 +3,6 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.enums import JobStatus
-
 
 class JobStatusCounts(BaseModel):
     pending: int
