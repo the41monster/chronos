@@ -13,16 +13,48 @@ Chronos runs as a single process — the FastAPI app, scheduler, and worker pool
 
 ## Prerequisites
 
-- Python 3.12
-- Docker (for PostgreSQL)
+- Docker
 
-## Local Setup
+## Quick Start (Docker)
 
-**1. Clone and install dependencies**
+**1. Clone and configure**
 
 ```bash
 git clone https://github.com/the41monster/chronos.git
 cd chronos
+cp .env.example .env
+```
+
+Edit `.env` with your values — see [Environment Variables](#environment-variables) below.
+
+**2. Start everything**
+
+```bash
+docker compose up --build
+```
+
+This starts the database, runs migrations, and launches the API and frontend.
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| API | http://localhost:8000 |
+| API docs | http://localhost:8000/docs |
+
+## Running Script Jobs
+
+Script jobs execute Python files inside the API container. Place your scripts in the `scripts/` folder at the project root — it is mounted at `/app/scripts` inside the container.
+
+```
+scripts/
+  hello.py   →   /app/scripts/hello.py  (use this path when submitting the job)
+```
+
+## Local Setup (without Docker)
+
+**1. Install dependencies**
+
+```bash
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 # source .venv/bin/activate   # macOS/Linux
@@ -35,23 +67,14 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` with your values — see [Environment Variables](#environment-variables) below.
-
-**3. Start the database**
+**3. Start PostgreSQL and run migrations**
 
 ```bash
-docker compose up -d
-```
-
-This starts PostgreSQL on port `5433`.
-
-**4. Run migrations**
-
-```bash
+docker compose up -d db
 alembic upgrade head
 ```
 
-**5. Start the server**
+**4. Start the server**
 
 ```bash
 python run.py

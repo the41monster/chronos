@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="auth-screen">
+    <div class="auth-card">
+      <h1>Chronos</h1>
+      <div class="tab-bar">
+        <button class="tab active" data-tab="login">Login</button>
+        <button class="tab" data-tab="register">Register</button>
+      </div>
+      <form id="login-form">
+        <input type="text" id="login-username" placeholder="Username" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit">Login</button>
+        <p id="login-error" class="error"></p>
+      </form>
+      <form id="register-form" class="hidden">
+        <input type="text" id="reg-username" placeholder="Username" required>
+        <input type="email" id="reg-email" placeholder="Email" required>
+        <input type="password" id="reg-password" placeholder="Password" required>
+        <button type="submit">Register</button>
+        <p id="register-error" class="error"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-screen" class="hidden">
+    <nav>
+      <span class="logo">Chronos</span>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-view="jobs">Jobs</button>
+        <button class="nav-tab" data-view="submit">Submit Job</button>
+        <button class="nav-tab" data-view="monitor">Monitor</button>
+      </div>
+      <button id="logout-btn">Logout</button>
+    </nav>
+
+    <div id="view-jobs" class="view">
+      <div class="view-header">
+        <h2>Jobs</h2>
+        <button id="refresh-jobs">Refresh</button>
+      </div>
+      <table id="jobs-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Schedule</th>
+            <th>Status</th>
+            <th>Next Run</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="jobs-tbody"></tbody>
+      </table>
+      <p id="jobs-empty" class="empty hidden">No jobs yet.</p>
+
+      <div id="executions-panel" class="hidden">
+        <div class="panel-header">
+          <h3>Execution History</h3>
+          <button id="close-executions">✕</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Started</th>
+              <th>Completed</th>
+              <th>Status</th>
+              <th>Log</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody id="executions-tbody"></tbody>
+        </table>
+        <p id="executions-empty" class="empty hidden">No executions yet.</p>
+      </div>
+    </div>
+
+    <div id="view-submit" class="view hidden">
+      <h2>Submit Job</h2>
+      <form id="submit-form">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="job-name" required>
+        </div>
+        <div class="form-group">
+          <label>Job Type</label>
+          <select id="job-type">
+            <option value="script">Script</option>
+            <option value="api_call">API Call</option>
+            <option value="data_process">Data Process</option>
+          </select>
+        </div>
+
+        <div id="payload-script">
+          <div class="form-group">
+            <label>Script Path</label>
+            <input type="text" id="script-path" placeholder="/path/to/script.py">
+          </div>
+          <div class="form-group">
+            <label>Args (space-separated)</label>
+            <input type="text" id="script-args" placeholder="arg1 arg2">
+          </div>
+        </div>
+
+        <div id="payload-api" class="hidden">
+          <div class="form-group">
+            <label>URL</label>
+            <input type="text" id="api-url" placeholder="https://example.com/api">
+          </div>
+          <div class="form-group">
+            <label>Method</label>
+            <select id="api-method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Body (JSON)</label>
+            <textarea id="api-body" placeholder='{"key": "value"}'></textarea>
+          </div>
+        </div>
+
+        <div id="payload-data" class="hidden">
+          <p class="hint" style="margin-bottom:1rem">No additional configuration required.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Schedule Type</label>
+          <select id="schedule-type">
+            <option value="one_time">One Time</option>
+            <option value="recurring">Recurring</option>
+          </select>
+        </div>
+
+        <div id="schedule-one-time" class="form-group">
+          <label>Execution Time</label>
+          <input type="datetime-local" id="execution-time">
+        </div>
+
+        <div id="schedule-recurring" class="form-group hidden">
+          <label>Cron Expression</label>
+          <input type="text" id="recurrence-pattern" placeholder="0 * * * *">
+          <span class="hint">e.g. "0 * * * *" runs every hour</span>
+        </div>
+
+        <button type="submit">Submit</button>
+        <p id="submit-error" class="error"></p>
+        <p id="submit-success" class="success hidden"></p>
+      </form>
+    </div>
+
+    <div id="view-monitor" class="view hidden">
+      <div class="view-header">
+        <h2>Monitor</h2>
+        <button id="refresh-monitor">Refresh</button>
+      </div>
+      <p id="monitor-key-missing" class="error hidden">
+        MONITOR_API_KEY not configured — set <code>MONITOR_KEY</code> at the top of app.js.
+      </p>
+      <div id="health-counts" class="counts-grid"></div>
+      <h3 style="margin-bottom:0.75rem">Permanently Failed Jobs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Retries</th>
+            <th>Last Error</th>
+            <th>Failed At</th>
+          </tr>
+        </thead>
+        <tbody id="failures-tbody"></tbody>
+      </table>
+      <p id="failures-empty" class="empty hidden">No failed jobs.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
