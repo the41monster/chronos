@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
+from croniter import croniter
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.models.enums import JobStatus
+from app.models.enums import JobStatus, ScheduleType
 from app.models.job import Job
 from app.models.user import User
 from app.schemas.job import JobResponse, JobSubmitRequest, JobSubmitResponse, RescheduleRequest
@@ -20,6 +21,11 @@ async def submit_job(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    execution_time = payload.execution_time
+    if payload.schedule_type == ScheduleType.RECURRING and not execution_time and payload.recurrence_pattern:
+        cron = croniter(payload.recurrence_pattern, datetime.now(timezone.utc))
+        execution_time = cron.get_next(datetime)
+    
     job = Job(
         user_id=current_user.id,
         name=payload.name,
@@ -27,7 +33,7 @@ async def submit_job(
         job_type=payload.job_type,
         payload=payload.payload,
         schedule_type=payload.schedule_type,
-        execution_time=payload.execution_time,
+        execution_time=execution_time,
         recurrence_pattern=payload.recurrence_pattern
     )
     db.add(job)
