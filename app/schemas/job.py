@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, model_validator
 
-from app.models.enums import JobStatus, JobType, ScheduleType
+from app.models.enums import JobStatus, JobType, ScheduleType, ExecutionStatus
 
 
 class JobSubmitRequest(BaseModel):
@@ -59,3 +59,16 @@ class RescheduleRequest(BaseModel):
         if not self.execution_time and not self.recurrence_pattern:
             raise ValueError("At least one of execution_time or recurrence_pattern must be provided")
         return self
+
+
+class JobExecutionResponse(BaseModel):
+    id: uuid.UUID
+    job_id: uuid.UUID
+    status: ExecutionStatus
+    started_at: datetime
+    completed_at: datetime | None
+    retry_count: int
+    log_output: str | None
+    error_message: str | None
+
+    model_config = {"from_attributes": True}
