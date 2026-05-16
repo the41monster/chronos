@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    MONITOR_API_KEY: str = ""
+
     SCHEDULER_POLL_INTERVAL: int = 10 # seconds
 
     SMTP_HOST: str = "smtp.gmail.com"
